@@ -7,8 +7,7 @@ import (
 
 func main() {
 
-	// root
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) { //res,req
 		w.Write([]byte(`
       <html>
         <head>
@@ -22,7 +21,7 @@ func main() {
 	})
 
 	// start the web server
-	if err := http.ListenAndServe(":3000", nil); err != nil {
+	if err := http.ListenAndServe(":3000", nil); err != nil { //Hosting Port
 		log.Fatal("ListenAndServe:", err)
 	}
 
