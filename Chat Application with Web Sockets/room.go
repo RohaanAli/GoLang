@@ -15,6 +15,17 @@ type room struct {
 	clients map[*client]bool //list of curr clients
 }
 
+// for easy declaration of Room. Instead of writing everything again and again
+
+func newRoom() *room {
+	return &room{
+		forward: make(chan []byte),
+		join:    make(chan *client),
+		leave:   make(chan *client),
+		clients: make(map[*client]bool),
+	}
+}
+
 func (r *room) run() {
 	for {
 		select {
