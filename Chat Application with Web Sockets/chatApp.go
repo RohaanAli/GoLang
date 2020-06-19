@@ -25,7 +25,11 @@ func (temp *templateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 
+	r := newRoom()
 	http.Handle("/", &templateHandler{filename: "/index.html"})
+	http.Handle("/room", r)
+
+	go r.run()
 
 	// start the web servers
 	if err := http.ListenAndServe(":3000", nil); err != nil { //Defining Port
