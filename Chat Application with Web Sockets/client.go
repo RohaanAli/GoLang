@@ -15,6 +15,7 @@ type client struct {
 }
 
 // for init communication on web socket
+
 func (c *client) read() {
 	defer c.socket.Close()
 	for {
