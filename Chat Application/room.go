@@ -4,6 +4,8 @@ import (
 	"log"
 	"net/http"
 
+	"./trace"
+
 	"github.com/gorilla/websocket"
 )
 
@@ -13,6 +15,7 @@ type room struct {
 	join    chan *client     //for clients that are joining
 	leave   chan *client     //for leaving clients
 	clients map[*client]bool //list of curr clients
+	tracer  trace.Tracer
 }
 
 // for easy declaration of Room. Instead of writing everything again and again
@@ -31,13 +34,17 @@ func (r *room) run() {
 		select {
 		case client := <-r.join:
 			r.clients[client] = true
+			r.tracer.Trace("New Client Joined")
 		case client := <-r.leave:
 			delete(r.clients, client)
 			close(client.send)
+			r.tracer.Trace("Client left")
 		case msg := <-r.forward:
 			for c := range r.clients {
 				c.send <- msg
+				r.tracer.Trace("-- sent to client")
 			}
+
 		}
 	}
 }

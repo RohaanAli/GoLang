@@ -6,8 +6,11 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"os"
 	"path/filepath"
 	"sync"
+
+	"./trace"
 )
 
 type templateHandler struct {
@@ -31,6 +34,7 @@ func main() {
 	var address = flag.String("address", ":3000", "The address of the Application")
 	flag.Parse()
 	r := newRoom()
+	r.tracer = trace.New(os.Stdout)
 	http.Handle("/", &templateHandler{filename: "index.html"})
 	http.Handle("/room", r)
 
