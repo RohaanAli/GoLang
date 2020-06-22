@@ -15,21 +15,17 @@ type authHandler struct {
 }
 
 func (h *authHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	_, err := r.Cookie("auth") //discarding cookie value '_' as we only need to know if it exists.
-	if err == http.ErrNoCookie {
+	if _, err := r.Cookie("auth"); err == http.ErrNoCookie {
 		w.Header().Set("Location", "/login")
+
 		w.WriteHeader(http.StatusTemporaryRedirect)
-		return
+	} else if err != nil {
+		// some other error
+		panic(err.Error())
+	} else {
+		// success - call the next handler
+		h.next.ServeHTTP(w, r)
 	}
-
-	// Error not included
-	if err != nil {
-
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	// success - call the next handler
-	h.next.ServeHTTP(w, r)
 }
 
 //just a helper func/ wrapper for handler
@@ -45,15 +41,13 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	case "login":
 		provider, err := gomniauth.Provider(provider)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("Error when trying to get provider %s: %s", provider, err), http.StatusBadRequest)
-			return
+			log.Fatalln("Error when trying to get provider", provider, "-", err)
 		}
-		loginURl, err := provider.GetBeginAuthURL(nil, nil)
+		loginURL, err := provider.GetBeginAuthURL(nil, nil)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("Error when trying to GetBeginAuthURL	for %s:%s", provider, err), http.StatusInternalServerError)
-			return
+			log.Fatalln("Error when trying to GetBeginAuthURL for", provider, "-", err)
 		}
-		w.Header().Set("Location", loginURl)
+		w.Header().Set("Location", loginURL)
 		w.WriteHeader(http.StatusTemporaryRedirect)
 
 	case "callback":
@@ -80,7 +74,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 			Name:  "auth",
 			Value: authCookieValue,
 			Path:  "/"})
-		w.Header().Set("Location", "/chat")
+		w.Header().Set("Location", "/index")
 		w.WriteHeader(http.StatusTemporaryRedirect)
 	default:
 		w.WriteHeader(http.StatusNotFound)

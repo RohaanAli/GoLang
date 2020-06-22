@@ -21,7 +21,7 @@ type client struct {
 // for init communication on web socket
 
 func (c *client) read() {
-	defer c.socket.Close()
+
 	for {
 		var msg *message
 		if err := c.socket.ReadJSON(&msg); err == nil {
@@ -36,7 +36,7 @@ func (c *client) read() {
 }
 
 func (c *client) write() {
-	defer c.socket.Close()
+
 	for msg := range c.send {
 		if err := c.socket.WriteJSON(msg); err != nil {
 			break
