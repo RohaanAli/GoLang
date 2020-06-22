@@ -7,10 +7,11 @@ import (
 	"./trace"
 
 	"github.com/gorilla/websocket"
+	"github.com/stretchr/objx"
 )
 
 type room struct {
-	forward chan []byte // forward is a channel that holds incoming messages that should be forwarded to the other clients.
+	forward chan *message // forward is a channel that holds incoming messages that should be forwarded to the other clients.
 
 	join    chan *client     //for clients that are joining
 	leave   chan *client     //for leaving clients
@@ -22,7 +23,7 @@ type room struct {
 
 func newRoom() *room {
 	return &room{
-		forward: make(chan []byte),
+		forward: make(chan *message),
 		join:    make(chan *client),
 		leave:   make(chan *client),
 		clients: make(map[*client]bool),
@@ -41,10 +42,18 @@ func (r *room) run() {
 			close(client.send)
 			r.tracer.Trace("Client left")
 		case msg := <-r.forward:
-			for c := range r.clients {
-				c.send <- msg
-				r.tracer.Trace("-- sent to client")
-			}
+			r.tracer.Trace("Message received: ", string(msg.Message))
+			for client := range r.clients {
+				select {
+				case client.send <- msg:
+					// send the message
+					r.tracer.Trace(" -- sent to client")
+				default:
+					// failed to send
+					delete(r.clients, client)
+					close(client.send)
+					r.tracer.Trace(" -- failed to send, cleaned up client")
+				}
 
 		}
 	}
@@ -58,16 +67,22 @@ const (
 var upgrader = &websocket.Upgrader{ReadBufferSize: socketBufferSize,
 	WriteBufferSize: socketBufferSize}
 
-func (r *room) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+func (r *room) ServeHTTP(w http.ResponseWriter, req *http.Request){
 	socket, err := upgrader.Upgrade(w, req, nil)
 	if err != nil {
 		log.Fatal("ServeHTTP:", err)
 		return
 	}
+	authCookie, err := req.Cookie("auth")
+	if err != nil {
+		log.Fatal("Failed to get auth cookie:", err)
+		return
+	}
 	client := &client{
-		socket: socket,
-		send:   make(chan []byte, messageBufferSize),
-		room:   r,
+		socket:   socket,
+		send:     make(chan *message, messageBufferSize),
+		room:     r,
+		userData: objx.MustFromBase64(authCookie.Value),
 	}
 	r.join <- client
 	defer func() { r.leave <- client }()

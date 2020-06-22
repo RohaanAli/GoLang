@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/gomniauth/providers/facebook"
 	"github.com/stretchr/gomniauth/providers/github"
 	"github.com/stretchr/gomniauth/providers/google"
+	"github.com/stretchr/objx"
 )
 
 type templateHandler struct {
@@ -24,13 +25,17 @@ type templateHandler struct {
 }
 
 // ServeHTTP handles the HTTP request for the template.
-func (temp *templateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	temp.once.Do(func() {
-
-		temp.templ = template.Must(template.ParseFiles(filepath.Join("templates", temp.filename)))
+func (t *templateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	t.once.Do(func() {
+		t.templ = template.Must(template.ParseFiles(filepath.Join("templates", t.filename)))
 	})
-	temp.templ.Execute(w, r)
-
+	data := map[string]interface{}{
+		"Host": r.Host,
+	}
+	if authCookie, err := r.Cookie("auth"); err == nil {
+		data["UserData"] = objx.MustFromBase64(authCookie.Value)
+	}
+	t.templ.Execute(w, data)
 }
 
 func main() {
