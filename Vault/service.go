@@ -27,6 +27,7 @@ type hashResponse struct {
 
 type validateRequest struct {
 	Password string `json:"password"`
+	Hash     string `json:"hash"`
 }
 type validateResponse struct {
 	Hash bool   `json:"valid"`
@@ -120,7 +121,8 @@ func (e Endpoints) Hash(ctx context.Context, password string) (string, error) {
 }
 
 func (e Endpoints) Validate(ctx context.Context, password, hash string) (bool, error) {
-	req := validateRequest{Password: password, Hash: hash}
+	req := validateRequest{
+		Password: password, Hash: hash}
 	resp, err := e.ValidateEndpoint(ctx, req)
 	if err != nil {
 		return false, err
@@ -129,5 +131,5 @@ func (e Endpoints) Validate(ctx context.Context, password, hash string) (bool, e
 	if validateResp.Err != "" {
 		return false, errors.New(validateResp.Err)
 	}
-	return validateResp.Valid, nil
+	return validateResp.Hash, nil
 }
