@@ -7,9 +7,11 @@
 package pb
 
 import (
-	context "context"
+	"context"
 	reflect "reflect"
 	sync "sync"
+
+	oldcontext "golang.org/x/net/context"
 
 	proto "github.com/golang/protobuf/proto"
 	grpc "google.golang.org/grpc"
@@ -430,7 +432,7 @@ func RegisterVaultServer(s *grpc.Server, srv VaultServer) {
 	s.RegisterService(&_Vault_serviceDesc, srv)
 }
 
-func _Vault_Hash_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Vault_Hash_Handler(srv interface{}, ctx oldcontext.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(HashRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -442,13 +444,13 @@ func _Vault_Hash_Handler(srv interface{}, ctx context.Context, dec func(interfac
 		Server:     srv,
 		FullMethod: "/pb.Vault/Hash",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx oldcontext.Context, req interface{}) (interface{}, error) {
 		return srv.(VaultServer).Hash(ctx, req.(*HashRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Vault_Validate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Vault_Validate_Handler(srv interface{}, ctx oldcontext.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ValidateRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -460,7 +462,7 @@ func _Vault_Validate_Handler(srv interface{}, ctx context.Context, dec func(inte
 		Server:     srv,
 		FullMethod: "/pb.Vault/Validate",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx oldcontext.Context, req interface{}) (interface{}, error) {
 		return srv.(VaultServer).Validate(ctx, req.(*ValidateRequest))
 	}
 	return interceptor(ctx, in, info, handler)
