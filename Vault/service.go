@@ -30,8 +30,8 @@ type validateRequest struct {
 	Hash     string `json:"hash"`
 }
 type validateResponse struct {
-	Hash bool   `json:"valid"`
-	Err  string `json:"err,omitempty"`
+	Valid bool   `json:"valid"`
+	Err   string `json:"err,omitempty"`
 }
 
 type Endpoints struct {
@@ -131,5 +131,5 @@ func (e Endpoints) Validate(ctx context.Context, password, hash string) (bool, e
 	if validateResp.Err != "" {
 		return false, errors.New(validateResp.Err)
 	}
-	return validateResp.Hash, nil
+	return validateResp.Valid, nil
 }
